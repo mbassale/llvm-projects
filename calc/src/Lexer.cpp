@@ -1,20 +1,20 @@
 #include "Lexer.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace charinfo {
 
-  LLVM_READNONE inline bool isWhitespace(char c) {
-    return c == ' ' || c == '\t' || c == '\f' || c == '\v' || c == '\r' || c == '\n';
-  }
-
-  LLVM_READNONE inline bool isDigit(char c) {
-    return c >= '0' && c <= '9';
-  }
-
-  LLVM_READNONE inline bool isLetter(char c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-  }
-
+LLVM_READNONE inline bool isWhitespace(char c) {
+  return c == ' ' || c == '\t' || c == '\f' || c == '\v' || c == '\r' ||
+         c == '\n';
 }
+
+LLVM_READNONE inline bool isDigit(char c) { return c >= '0' && c <= '9'; }
+
+LLVM_READNONE inline bool isLetter(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+} // namespace charinfo
 
 void Lexer::next(Token &token) {
   while (*BufferPtr && charinfo::isWhitespace(*BufferPtr)) {
@@ -44,7 +44,10 @@ void Lexer::next(Token &token) {
     return;
   } else {
     switch (*BufferPtr) {
-#define CASE(ch, tok) case ch: formToken(token, BufferPtr + 1, tok); break
+#define CASE(ch, tok)                                                          \
+  case ch:                                                                     \
+    formToken(token, BufferPtr + 1, tok);                                      \
+    break
       CASE('+', Token::plus);
       CASE('-', Token::minus);
       CASE('*', Token::star);
@@ -54,8 +57,8 @@ void Lexer::next(Token &token) {
       CASE(':', Token::colon);
       CASE(',', Token::comma);
 #undef CASE
-      default:
-        formToken(token, BufferPtr+1, Token::unknown);
+    default:
+      formToken(token, BufferPtr + 1, Token::unknown);
     }
     return;
   }
@@ -64,5 +67,6 @@ void Lexer::next(Token &token) {
 void Lexer::formToken(Token &Tok, const char *TokEnd, Token::TokenKind Kind) {
   Tok.Kind = Kind;
   Tok.Text = llvm::StringRef(BufferPtr, TokEnd - BufferPtr);
+  llvm::outs() << "Token: " << Tok.Kind << " Text: " << Tok.Text << "\n";
   BufferPtr = TokEnd;
 }
