@@ -62,5 +62,5 @@ bool Sema::semantic(AST *Tree) {
   }
   DeclCheck Check;
   Tree->accept(Check);
-  return Check.hasError();
+  return !Check.hasError();
 }

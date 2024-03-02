@@ -3,6 +3,7 @@ add_executable(calc
   Lexer.cpp
   Parser.cpp
   Sema.cpp
+  CodeGen.cpp
   Calc.cpp
 )
 
