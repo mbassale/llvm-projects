@@ -7,6 +7,7 @@ message("Found LLVM ${LLVM_PACKAGE_VERSION}, build type ${LLVM_BUILD_TYPE}")
 list(APPEND CMAKE_MODULE_PATH ${LLVM_DIR})
 
 set(NO_RTTI "-fno-rtti")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions(${NO_RTTI})
 
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
