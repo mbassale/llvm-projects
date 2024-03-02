@@ -2,6 +2,7 @@
 add_executable(calc
   Lexer.cpp
   Parser.cpp
+  Sema.cpp
   Calc.cpp
 )
 

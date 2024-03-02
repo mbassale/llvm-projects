@@ -1,5 +1,6 @@
 #include "Lexer.h"
 #include "Parser.h"
+#include "Sema.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/raw_ostream.h"
@@ -22,5 +23,7 @@ int main(int argc, char *argv[]) {
     llvm::errs() << "Syntax error.\n";
     return RETURN_SYNTAX_ERROR;
   }
+  Sema Sema;
+  Sema.semantic(Tree);
   return RETUNR_SUCCESS;
 }
