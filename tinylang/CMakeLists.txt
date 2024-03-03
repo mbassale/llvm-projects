@@ -16,3 +16,10 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS} "include")
 llvm_map_components_to_libnames(llvm_libs Core)
 
 add_subdirectory("lib")
+add_subdirectory("tests")
+
+# TinyLang Compiler Driver Executable
+add_executable(tinylang
+  tools/driver/tinylang.cpp
+)
+target_link_libraries(tinylang PRIVATE tinylanglib ${llvm_libs})
