@@ -1,0 +1,25 @@
+#ifndef TOK
+#define TOK(ID)
+#endif // TOK
+
+#ifndef PUNCTUATOR
+#define PUNCTUATOR(ID, SP) TOK(ID)
+#endif // PUNCTUATOR
+
+#ifndef KEYWORD
+#define KEYWORD(ID, FLAG) TOK(kw_ ## ID)
+#endif // KEYWORD
+
+TOK(unknown)
+TOK(eof)
+TOK(identifier)
+TOK(integer_literal)
+PUNCTUATOR(plus, "+")
+PUNCTUATOR(minus, "-")
+
+KEYWORD(BEGIN, KEYALL)
+KEYWORD(CONST, KEYALL)
+
+#undef KEYWORD
+#undef PUNCTUATOR
+#undef TOK
