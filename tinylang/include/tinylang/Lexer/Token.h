@@ -13,13 +13,14 @@ class Lexer;
 class Token {
   friend class Lexer;
 
-  const char *Ptr;
+  const char *Ptr{nullptr};
 
-  size_t Length;
+  size_t Length{0};
 
-  tok::TokenKind Kind;
+  tok::TokenKind Kind{tok::unknown};
 
 public:
+  Token() {}
   Token(const char *Ptr, size_t Length, tok::TokenKind Kind)
       : Ptr(Ptr), Length(Length), Kind(Kind) {}
 
