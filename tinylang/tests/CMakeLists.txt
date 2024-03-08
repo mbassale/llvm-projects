@@ -1,4 +1,6 @@
 
+find_package(GTest CONFIG REQUIRED)
+
 add_executable(
   tinylang-tests
   token.cpp
@@ -6,5 +8,5 @@ add_executable(
   parser.cpp
 )
 
-target_link_libraries(tinylang-tests PRIVATE LLVMCore LLVMSupport tinylanglib gtest gtest_main)
+target_link_libraries(tinylang-tests PRIVATE LLVMCore LLVMSupport tinylanglib GTest::gtest GTest::gtest_main)
 
