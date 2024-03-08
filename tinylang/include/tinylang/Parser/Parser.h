@@ -63,9 +63,16 @@ class Parser {
   bool parseDeclaration(DeclList &Decls);
   bool parseConstantDeclaration(DeclList &Decls);
   bool parseVariableDeclaration(DeclList &Decls);
+  bool parseProcedureDeclaration(DeclList &ParentDecls);
 
   bool parseIdentList(IdentList &Ids);
-  bool parseQualident(Decl *D);
+  bool parseQualifiedIdent(Decl *D);
+  bool parseStatementSequence(StmtList &Stmts);
+  bool parseStatement(StmtList &Stmts);
+  bool parseFormalParameters(FormalParamList &Params, Decl *&RetType);
+  bool parseFormalParameterList(FormalParamList &Params);
+  bool parseFormalParameter(FormalParamList &Params);
+  bool parseExpression(Expr *&E);
 
 public:
   Parser(Lexer &Lex, Sema &Actions);

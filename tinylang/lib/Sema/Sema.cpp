@@ -18,3 +18,34 @@ void Sema::actOnModuleDeclaration(ModuleDeclaration *ModDecl, SMLoc Loc,
 void Sema::actOnVariableDeclaration(DeclList &Decls, IdentList &Ids, Decl *D) {
   // TODO: unimplemented
 }
+
+void Sema::actOnConstantDeclaration(DeclList &Decls, SMLoc Loc, StringRef Name,
+                                    Expr *E) {
+  // TODO: unimplemented
+}
+
+ProcedureDeclaration *Sema::actOnProcedureDeclaration(SMLoc Loc,
+                                                      StringRef Name) {
+  return nullptr;
+}
+
+void Sema::actOnProcedureHeading(ProcedureDeclaration *ProcDecl,
+                                 FormalParamList &Params, Decl *RetType) {
+  // TODO: unimplemented
+}
+
+void Sema::actOnProcedureDeclaration(ProcedureDeclaration *ProcDecl, SMLoc Loc,
+                                     StringRef Name, DeclList &Decls,
+                                     StmtList &Stmts) {
+  // TODO: unimplemented
+}
+
+void Sema::actOnFormalParameterDeclaration(FormalParamList &Params,
+                                           IdentList &Ids, Decl *D,
+                                           bool IsVar) {
+  // TODO: unimplemented
+}
+
+Decl *Sema::actOnQualifiedIdentPart(Decl *Prev, SMLoc Loc, StringRef Name) {
+  return nullptr;
+}
