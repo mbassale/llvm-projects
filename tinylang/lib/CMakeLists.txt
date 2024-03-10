@@ -5,6 +5,7 @@ add_library(tinylanglib
   Basic/TokenKinds.cpp
   Lexer/Lexer.cpp
   Parser/Parser.cpp
+  Sema/Scope.cpp
   Sema/Sema.cpp
 )
 

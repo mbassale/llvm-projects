@@ -3,7 +3,11 @@
 
 #include "tinylang/Basic/Diagnostic.h"
 #include "tinylang/Basic/LLVM.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/SourceMgr.h"
+#include <llvm/Support/SMLoc.h>
+#include <tinylang/Basic/TokenKinds.h>
 
 namespace tinylang {
 
@@ -147,6 +151,227 @@ public:
   void setStmts(StmtList &L) { Stmts = L; }
 
   static bool classof(const Decl *D) { return D->getKind() == DK_Proc; }
+};
+
+class OperatorInfo {
+  SMLoc Loc;
+  uint32_t Kind : 16;
+  uint32_t IsUnspecified : 1;
+
+public:
+  OperatorInfo() : Loc(), Kind(tok::unknown), IsUnspecified(true) {}
+  OperatorInfo(SMLoc Loc, tok::TokenKind Kind, bool IsUnspecified = false)
+      : Loc(Loc), Kind(Kind), IsUnspecified(IsUnspecified) {}
+
+  SMLoc getLocation() const { return Loc; }
+  tok::TokenKind getKind() const { return static_cast<tok::TokenKind>(Kind); }
+  bool isUnspecified() const { return IsUnspecified; }
+};
+
+class Expr {
+public:
+  enum ExprKind {
+    EK_Infix,
+    EK_Prefix,
+    EK_Int,
+    EK_Bool,
+    EK_Var,
+    EK_Const,
+    EK_Func,
+  };
+
+private:
+  const ExprKind Kind;
+  TypeDeclaration *Ty;
+  bool IsConstant;
+
+protected:
+  Expr(ExprKind Kind, TypeDeclaration *Ty, bool IsConstant)
+      : Kind(Kind), Ty(Ty), IsConstant(IsConstant) {}
+
+public:
+  ExprKind getKind() const { return Kind; }
+  TypeDeclaration *getType() { return Ty; }
+  void setType(TypeDeclaration *T) { Ty = T; }
+  bool isConstant() const { return IsConstant; }
+};
+
+class InfixExpression : public Expr {
+  Expr *Left;
+  Expr *Right;
+  const OperatorInfo Op;
+
+public:
+  InfixExpression(Expr *Left, Expr *Right, OperatorInfo Op, TypeDeclaration *Ty,
+                  bool IsConstant)
+      : Expr(EK_Infix, Ty, IsConstant), Left(Left), Right(Right), Op(Op) {}
+
+  Expr *getLeft() { return Left; }
+  Expr *getRight() { return Right; }
+  const OperatorInfo &getOperatorInfo() { return Op; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Infix; }
+};
+
+class PrefixExpression : public Expr {
+  Expr *E;
+  const OperatorInfo Op;
+
+public:
+  PrefixExpression(Expr *E, OperatorInfo Op, TypeDeclaration *Ty,
+                   bool IsConstant)
+      : Expr(EK_Prefix, Ty, IsConstant), E(E), Op(Op) {}
+
+  Expr *getExpr() { return E; }
+  const OperatorInfo &getOperatorInfo() { return Op; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Prefix; }
+};
+
+class IntegerLiteral : public Expr {
+  SMLoc Loc;
+  llvm::APSInt Value;
+
+public:
+  IntegerLiteral(SMLoc Loc, const llvm::APSInt &Value, TypeDeclaration *Ty)
+      : Expr(EK_Int, Ty, true), Loc(Loc), Value(Value) {}
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Int; }
+};
+
+class BooleanLiteral : public Expr {
+  bool Value;
+
+public:
+  BooleanLiteral(bool Value, TypeDeclaration *Ty)
+      : Expr(EK_Bool, Ty, true), Value(Value) {}
+
+  bool getValue() { return Value; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Bool; }
+};
+
+class VariableAccess : public Expr {
+  Decl *Var;
+
+public:
+  VariableAccess(VariableDeclaration *Var)
+      : Expr(EK_Var, Var->getType(), false), Var(Var) {}
+  VariableAccess(FormalParameterDeclaration *Param)
+      : Expr(EK_Var, Param->getType(), false), Var(Param) {}
+
+  Decl *getDecl() { return Var; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Var; }
+};
+
+class ConstantAccess : public Expr {
+  ConstantDeclaration *Const;
+
+public:
+  ConstantAccess(ConstantDeclaration *Const)
+      : Expr(EK_Const, Const->getExpr()->getType(), true), Const(Const) {}
+
+  ConstantDeclaration *geDecl() { return Const; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Const; }
+};
+
+class FunctionCallExpr : public Expr {
+  ProcedureDeclaration *Proc;
+  ExprList Params;
+
+public:
+  FunctionCallExpr(ProcedureDeclaration *Proc, ExprList Params)
+      : Expr(EK_Func, Proc->getRetType(), false), Proc(Proc), Params(Params) {}
+
+  ProcedureDeclaration *geDecl() { return Proc; }
+  const ExprList &getParams() { return Params; }
+
+  static bool classof(const Expr *E) { return E->getKind() == EK_Func; }
+};
+
+class Stmt {
+public:
+  enum StmtKind { SK_Assign, SK_ProcCall, SK_If, SK_While, SK_Return };
+
+private:
+  const StmtKind Kind;
+
+protected:
+  Stmt(StmtKind Kind) : Kind(Kind) {}
+
+public:
+  StmtKind getKind() const { return Kind; }
+};
+
+class AssignmentStatement : public Stmt {
+  VariableDeclaration *Var;
+  Expr *E;
+
+public:
+  AssignmentStatement(VariableDeclaration *Var, Expr *E)
+      : Stmt(SK_Assign), Var(Var), E(E) {}
+
+  VariableDeclaration *getVar() { return Var; }
+  Expr *getExpr() { return E; }
+
+  static bool classof(const Stmt *S) { return S->getKind() == SK_Assign; }
+};
+
+class ProcedureCallStatement : public Stmt {
+  ProcedureDeclaration *Proc;
+  ExprList Params;
+
+public:
+  ProcedureCallStatement(ProcedureDeclaration *Proc, ExprList &Params)
+      : Stmt(SK_ProcCall), Proc(Proc), Params(Params) {}
+
+  ProcedureDeclaration *getProc() { return Proc; }
+  const ExprList &getParams() { return Params; }
+
+  static bool classof(const Stmt *S) { return S->getKind() == SK_ProcCall; }
+};
+
+class IfStatement : public Stmt {
+  Expr *Cond;
+  StmtList IfStmts;
+  StmtList ElseStmts;
+
+public:
+  IfStatement(Expr *Cond, StmtList &IfStmts, StmtList &ElseStmts)
+      : Stmt(SK_If), Cond(Cond), IfStmts(IfStmts), ElseStmts(ElseStmts) {}
+
+  Expr *getCond() { return Cond; }
+  const StmtList &getIfStmts() { return IfStmts; }
+  const StmtList &getElseStmts() { return ElseStmts; }
+
+  static bool classof(const Stmt *S) { return S->getKind() == SK_If; }
+};
+
+class WhileStatement : public Stmt {
+  Expr *Cond;
+  StmtList Stmts;
+
+public:
+  WhileStatement(Expr *Cond, StmtList &Stmts)
+      : Stmt(SK_While), Cond(Cond), Stmts(Stmts) {}
+
+  Expr *getCond() { return Cond; }
+  const StmtList &getWhileStmts() { return Stmts; }
+
+  static bool classof(const Stmt *S) { return S->getKind() == SK_While; }
+};
+
+class ReturnStatement : public Stmt {
+  Expr *RetVal;
+
+public:
+  ReturnStatement(Expr *RetVal) : Stmt(SK_Return), RetVal(RetVal) {}
+
+  Expr *getRetVal() { return RetVal; }
+
+  static bool classof(const Stmt *S) { return S->getKind() == SK_Return; }
 };
 
 } // namespace tinylang
