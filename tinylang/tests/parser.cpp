@@ -7,6 +7,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
 #include "gtest/gtest.h"
+#include <tinylang/Basic/TokenKinds.h>
 
 using namespace llvm;
 using namespace tinylang;
@@ -179,6 +180,68 @@ TEST_F(ParserFixture, TestParseIfStmt) {
   ASSERT_EQ(IfStmt->getElseStmts().size(), 1);
   RetStmt = dyn_cast_or_null<ReturnStatement>(IfStmt->getElseStmts()[0]);
   ASSERT_NE(RetStmt, nullptr);
+}
+
+TEST_F(ParserFixture, TestWhileStmt) {
+  ModuleDeclaration *ModuleDecl = parse("   \
+  MODULE Test;                              \
+                                            \
+  PROCEDURE PROCA(a, b: INTEGER) : INTEGER; \
+  VAR i: INTEGER;                           \
+  BEGIN                                     \
+    i := a;                                 \
+    WHILE i <= b DO                         \
+      i := i + 1;                           \
+    END;                                    \
+    RETURN i;                               \
+  END PROCA;                                \
+                                            \
+  END Test.\n");
+  ASSERT_FALSE(HasErrors());
+  ASSERT_NE(ModuleDecl, nullptr);
+  ASSERT_EQ(ModuleDecl->getDecls().size(), 1);
+  ASSERT_EQ(ModuleDecl->getStmts().size(), 0);
+
+  ProcedureDeclaration *ProcDecl =
+      dyn_cast_or_null<ProcedureDeclaration>(ModuleDecl->getDecls()[0]);
+  ASSERT_NE(ProcDecl, nullptr);
+  ASSERT_EQ(ProcDecl->getName(), "PROCA");
+  assert_type(ProcDecl->getRetType(), "INTEGER");
+
+  ASSERT_EQ(ProcDecl->getDecls().size(), 1);
+  ASSERT_EQ(ProcDecl->getStmts().size(), 3);
+
+  VariableDeclaration *ProcVarDecl =
+      dyn_cast_or_null<VariableDeclaration>(ProcDecl->getDecls()[0]);
+  ASSERT_NE(ProcVarDecl, nullptr);
+  ASSERT_EQ(ProcVarDecl->getName(), "i");
+  assert_type(ProcVarDecl->getType(), "INTEGER");
+
+  WhileStatement *WhileStmt =
+      dyn_cast_or_null<WhileStatement>(ProcDecl->getStmts()[1]);
+  ASSERT_NE(WhileStmt, nullptr);
+
+  // check condition
+  ASSERT_NE(WhileStmt->getCond(), nullptr);
+  InfixExpression *InfixExpr =
+      dyn_cast_or_null<InfixExpression>(WhileStmt->getCond());
+  ASSERT_NE(InfixExpr, nullptr);
+  Expr *Left = InfixExpr->getLeft();
+  assert_type(Left->getType(), "INTEGER");
+  Expr *Right = InfixExpr->getRight();
+  assert_type(Right->getType(), "INTEGER");
+
+  // check loop body
+  ASSERT_EQ(WhileStmt->getWhileStmts().size(), 1);
+  AssignmentStatement *AssignStmt =
+      dyn_cast_or_null<AssignmentStatement>(WhileStmt->getWhileStmts()[0]);
+  ASSERT_NE(AssignStmt, nullptr);
+  VariableDeclaration *VarDecl = AssignStmt->getVar();
+  ASSERT_NE(VarDecl, nullptr);
+  ASSERT_EQ(VarDecl->getName(), "i");
+  InfixExpr = dyn_cast_or_null<InfixExpression>(AssignStmt->getExpr());
+  ASSERT_NE(InfixExpr, nullptr);
+  ASSERT_EQ(InfixExpr->getOperatorInfo().getKind(), tok::plus);
 }
 
 TEST_F(ParserFixture, FullModuleParsing) {

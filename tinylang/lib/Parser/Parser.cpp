@@ -346,6 +346,7 @@ bool Parser::parseStatement(StmtList &Stmts) {
 
   // identifier?
   if (Tok.is(tok::identifier)) {
+
     Decl *D;
     Expr *E = nullptr;
     SMLoc Loc = Tok.getLocation();

@@ -207,7 +207,8 @@ void Sema::actOnAssignment(StmtList &Stmts, SMLoc Loc, Decl *D, Expr *E) {
     }
     Stmts.push_back(new AssignmentStatement(Var, E));
   } else if (D) {
-    // TODO: emit error
+    // assignment on FormalParameterDeclaration is not yet implemented.
+    Diags.report(Loc, diag::err_not_yet_implemented);
   }
 }
 
