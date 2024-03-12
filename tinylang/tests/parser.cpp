@@ -263,6 +263,7 @@ END Test.                                 \n\
 ";
 
   ModuleDeclaration *ModDecl = parse(InputSrc);
+  ASSERT_FALSE(HasErrors());
   ASSERT_NE(ModDecl, nullptr);
   ASSERT_EQ(ModDecl->getName(), "Test");
 }
