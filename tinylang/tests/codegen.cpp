@@ -7,12 +7,16 @@
 #include "tinylang/Sema/Sema.h"
 #include "llvm/CodeGen/CommandFlags.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/WithColor.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/TargetParser/Host.h"
 #include "gtest/gtest.h"
+#include <memory>
 
 using namespace llvm;
 using namespace tinylang;
@@ -20,9 +24,6 @@ using namespace tinylang;
 class CodeGeneratorFixture : public testing::Test {
 protected:
   int NumErrors = 0;
-
-  void SetUp() override {}
-  void TearDown() override {}
 
   bool HasErrors() { return NumErrors > 0; }
 

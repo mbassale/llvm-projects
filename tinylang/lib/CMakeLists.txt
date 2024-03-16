@@ -7,5 +7,6 @@ add_library(tinylanglib
   Parser/Parser.cpp
   Sema/Scope.cpp
   Sema/Sema.cpp
+  CodeGen/CodeGenerator.cpp
 )
 
