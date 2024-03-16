@@ -2,6 +2,11 @@
 cmake_minimum_required(VERSION 3.20.0)
 project("tinylang")
 
+# Set the default build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 find_package(LLVM REQUIRED CONFIG)
 message("Found LLVM ${LLVM_PACKAGE_VERSION}, build type ${LLVM_BUILD_TYPE}")
 list(APPEND CMAKE_MODULE_PATH ${LLVM_DIR})
@@ -13,7 +18,10 @@ add_definitions(${NO_RTTI})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 include_directories(SYSTEM ${LLVM_INCLUDE_DIRS} "include")
-llvm_map_components_to_libnames(llvm_libs 
+
+# List of common LLVM components
+set(common_llvm_libs
+  ${LLVM_TARGETS_TO_BUILD}
   Analysis
   CodeGen
   Core
@@ -29,9 +37,21 @@ llvm_map_components_to_libnames(llvm_libs
   Support
   TransformUtils
   Vectorize
-  AArch64CodeGen
-  AArch64AsmParser
+  CodeGen
+  AsmParser
 )
+
+# Detect host system processor and add architecture-specific components
+#if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+  # For x86_64 architecture
+  #  list(APPEND common_llvm_libs "X86")
+  #elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
+  # For ARM architecture
+  # list(APPEND common_llvm_libs "AArch64")
+  #endif()
+
+# Map LLVM components to library names
+llvm_map_components_to_libnames(llvm_libs ${common_llvm_libs})
 
 add_subdirectory("lib")
 add_subdirectory("tests")

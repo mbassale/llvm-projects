@@ -8,6 +8,7 @@ using namespace llvm;
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   InitLLVM X(argc, argv);
+
   InitializeAllTargets();
   InitializeAllTargetMCs();
   InitializeAllAsmPrinters();

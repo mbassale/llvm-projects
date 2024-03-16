@@ -44,11 +44,11 @@ protected:
 
   llvm::TargetMachine *createTargetMachine() {
     llvm::Triple Triple = llvm::Triple(llvm::sys::getDefaultTargetTriple());
+    llvm::outs() << "DefaultTargetTriple: "
+                 << llvm::sys::getDefaultTargetTriple() << "\n";
 
     llvm::TargetOptions TargetOptions =
         codegen::InitTargetOptionsFromCodeGenFlags(Triple);
-    std::string CPUStr = codegen::getCPUStr();
-    std::string FeatureStr = codegen::getFeaturesStr();
 
     std::string Error;
     const llvm::Target *Target =
@@ -57,6 +57,9 @@ protected:
       llvm::WithColor::error(llvm::errs(), "test") << Error;
       return nullptr;
     }
+
+    std::string CPUStr = codegen::getCPUStr();
+    std::string FeatureStr = "";
 
     llvm::TargetMachine *TM = Target->createTargetMachine(
         Triple.getTriple(), CPUStr, FeatureStr, TargetOptions,
